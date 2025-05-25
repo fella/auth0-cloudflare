@@ -44,6 +44,26 @@ export default {
         request
       );
     }
+    
+    if (pathname === '/api/whoami') {
+      return requireAuth(request, async (user) => {
+        const whoami = {
+          sub: user.sub,
+          email: user.email,
+          roles: user['https://auth.harvest.org/roles'] || [],
+          wp_role: user['https://auth.harvest.org/wp_role'] || null,
+          group: user['https://auth.harvest.org/group'] || null,
+        };
+    
+        return withCors(
+          new Response(JSON.stringify({ message: '🙋 Who Am I', whoami }), {
+            headers: { 'Content-Type': 'application/json' },
+          }),
+          request
+        );
+      });
+    }
+    
 
     // 🚫 Catch-all
     return new Response('Not Found', { status: 404 });
