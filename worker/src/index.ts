@@ -6,6 +6,10 @@ export default {
     const url = new URL(request.url);
     const pathname = url.pathname;
 
+    console.log('[Worker] Method:', request.method);
+    console.log('[Worker] Origin:', request.headers.get('Origin'));
+    console.log('[Worker] Path:', pathname);
+
     // ✅ Handle CORS preflight
     const corsResponse = handleOptions(request);
     if (corsResponse) return corsResponse;
