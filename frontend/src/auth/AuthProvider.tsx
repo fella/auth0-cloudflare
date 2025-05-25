@@ -72,6 +72,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (isAuthenticated) {
           const user = await auth0Client.getUser();
           const token = await auth0Client.getTokenSilently();
+          // Get token for testing
+          console.log('[Auth0] Token:', token);
           const idTokenClaims = await auth0Client.getIdTokenClaims();
 
           setUser(user);
