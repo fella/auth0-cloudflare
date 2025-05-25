@@ -3,5 +3,12 @@ main = "worker/src/index.ts"
 compatibility_date = "2025-05-24"
 nodejs_compat = true
 
+[build]
+upload.include = ["node_modules"]
+upload.exclude = ["**/*.test.*"]
+
+[build.upload]
+format = "modules"
+
 [env.production]
 routes = ["https://api.harvest.org/*"]
