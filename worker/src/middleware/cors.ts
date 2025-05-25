@@ -3,7 +3,8 @@
 const ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'https://staging.harvest.org',
-    'https://watch.harvest.org' // Add more as needed
+    'https://watch.harvest.org',
+    'https://auth.harvest.org' // Add more as needed
   ];
   
   export function handleOptions(request: Request): Response | null {
