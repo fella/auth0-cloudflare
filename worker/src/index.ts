@@ -6,44 +6,46 @@ export default {
     const url = new URL(request.url);
     const pathname = url.pathname;
 
+    // 🌐 Dev logging
     console.log('[Worker] Method:', request.method);
-    console.log('[Worker] Origin:', request.headers.get('Origin'));
     console.log('[Worker] Path:', pathname);
+    console.log('[Worker] Origin:', request.headers.get('Origin'));
 
-    // ✅ Handle CORS preflight
+    // 🛑 Handle CORS preflight
     const corsResponse = handleOptions(request);
     if (corsResponse) return corsResponse;
 
-    // 🔐 Protected route
+    // 🛡️ Protected API route
     if (pathname === '/api/protected') {
       return requireAuth(request, async (user) => {
-        const json = JSON.stringify({
+        const data = {
           message: '🔒 Protected route accessed!',
-          user
-        });
-
+          user,
+        };
         return withCors(
-          new Response(JSON.stringify({ message: '🔒 Protected route accessed!', user }), {
-            headers: { 'Content-Type': 'application/json' }
+          new Response(JSON.stringify(data), {
+            headers: { 'Content-Type': 'application/json' },
           }),
           request
         );
       });
     }
 
-    // 🧪 Dev route
+    // 🧪 Debug route
     if (pathname === '/debug/token') {
+      const debugData = {
+        message: '🔍 Debug Info',
+        headers: Object.fromEntries(request.headers),
+      };
       return withCors(
-        new Response(JSON.stringify({
-          message: '🔍 Debug Info',
-          headers: Object.fromEntries(request.headers)
-        }), {
-          headers: { 'Content-Type': 'application/json' }
+        new Response(JSON.stringify(debugData), {
+          headers: { 'Content-Type': 'application/json' },
         }),
         request
       );
     }
 
+    // 🚫 Catch-all
     return new Response('Not Found', { status: 404 });
-  }
+  },
 };

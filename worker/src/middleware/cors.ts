@@ -3,8 +3,7 @@
 const ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'https://staging.harvest.org',
-    'https://watch.harvest.org',
-    'https://auth.harvest.org' // Add more as needed
+    'https://auth0-worker.webdept.workers.dev',
   ];
   
   export function handleOptions(request: Request): Response | null {
@@ -12,7 +11,7 @@ const ALLOWED_ORIGINS = [
   
     const origin = request.headers.get('Origin') || '';
     if (!ALLOWED_ORIGINS.includes(origin)) {
-      return new Response('Forbidden', { status: 403 });
+      return new Response('Forbidden: Origin not allowed', { status: 403 });
     }
   
     return new Response(null, {
@@ -22,6 +21,7 @@ const ALLOWED_ORIGINS = [
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Authorization, Content-Type',
         'Access-Control-Max-Age': '86400',
+        'Vary': 'Origin',
       },
     });
   }
@@ -30,16 +30,14 @@ const ALLOWED_ORIGINS = [
     const origin = request.headers.get('Origin') || '';
     const headers = new Headers(response.headers);
   
-    if (origin && ALLOWED_ORIGINS.includes(origin)) {
-        headers.set('Access-Control-Allow-Origin', origin);
-      } else {
-        headers.set('Access-Control-Allow-Origin', '*'); // Fallback for dev
-      }      
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      headers.set('Access-Control-Allow-Origin', origin);
       headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
       headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
       headers.set('Access-Control-Max-Age', '86400');
       headers.set('Vary', 'Origin');
-    
+    }
+  
     return new Response(response.body, {
       status: response.status,
       headers,
