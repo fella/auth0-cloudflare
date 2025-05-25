@@ -30,14 +30,16 @@ const ALLOWED_ORIGINS = [
     const origin = request.headers.get('Origin') || '';
     const headers = new Headers(response.headers);
   
-    if (ALLOWED_ORIGINS.includes(origin)) {
-      headers.set('Access-Control-Allow-Origin', origin);
+    if (origin && ALLOWED_ORIGINS.includes(origin)) {
+        headers.set('Access-Control-Allow-Origin', origin);
+      } else {
+        headers.set('Access-Control-Allow-Origin', '*'); // Fallback for dev
+      }      
       headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
       headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
       headers.set('Access-Control-Max-Age', '86400');
       headers.set('Vary', 'Origin');
-    }
-  
+    
     return new Response(response.body, {
       status: response.status,
       headers,

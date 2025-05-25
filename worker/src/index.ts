@@ -19,7 +19,7 @@ export default {
         });
 
         return withCors(
-          new Response(json, {
+          new Response(JSON.stringify({ message: '🔒 Protected route accessed!', user }), {
             headers: { 'Content-Type': 'application/json' }
           }),
           request
