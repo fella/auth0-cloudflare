@@ -2,6 +2,3 @@ name = "auth0-worker"
 main = "worker/src/index.ts"
 compatibility_date = "2025-05-25"
 compatibility_flags = ["nodejs_compat"]
-
-[env.production]
-routes = ["https://api.harvest.org/*"]

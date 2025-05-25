@@ -6,10 +6,7 @@
     "lib": ["DOM", "ES2020"],
     "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true,
-    "allowJs": true,
-    "outDir": "dist",
-    "rootDir": "worker"
+    "skipLibCheck": true
   },
   "include": ["worker"]
 }
