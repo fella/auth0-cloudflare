@@ -1,6 +1,6 @@
 // /frontend/src/App.tsx
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useAuth } from './auth/AuthProvider';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -9,34 +9,35 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const hasRedirected = useRef(false); // ✅ Stable across renders
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (isAuthenticated && wpRole) {
-        if (location.pathname === '/debug') return; // ✅ Skip redirect on /debug
-        console.log(`[Frontend] Detected wp_role: ${wpRole}`);
-          switch (wpRole) {
-            case 'administrator':
-              navigate('/admin');
-              break;
-            case 'viewer':
-              navigate('/viewer');
-              break;
-            case 'contributor':
-              navigate('/contributor');
-              break;
-            case 'harvestplus_registrant':
-              navigate('/registrant');
-              break;
-            default:
-              navigate('/no-role');
-              break;
-          }
-      }
-  }, 100);
-  return () => clearTimeout(timer);
-  }, 
-  [isAuthenticated, wpRole, navigate]);
+    if (hasRedirected.current) return;
+    if (!isAuthenticated || !wpRole) return;
+    if (location.pathname === '/debug' || location.pathname === '/claims') return;
+
+    console.log(`[Frontend] Detected wp_role: ${wpRole}`);
+
+    switch (wpRole) {
+      case 'administrator':
+        navigate('/admin');
+        break;
+      case 'viewer':
+        navigate('/viewer');
+        break;
+      case 'contributor':
+        navigate('/contributor');
+        break;
+      case 'harvestplus_registrant':
+        navigate('/registrant');
+        break;
+      default:
+        navigate('/no-role');
+        break;
+    }
+
+    hasRedirected.current = true; // ✅ Prevent future redirects
+  }, [isAuthenticated, wpRole, navigate, location.pathname]);
 
   const callProtected = async () => {
     console.log('[Frontend] Calling /protected API...');
@@ -75,4 +76,3 @@ function App() {
 }
 
 export default App;
-
