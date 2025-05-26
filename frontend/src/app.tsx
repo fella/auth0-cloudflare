@@ -2,14 +2,17 @@
 
 import React, { useEffect } from 'react';
 import { useAuth } from './auth/AuthProvider';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 function App() {
   const { isAuthenticated, user, login, logout, token, loading, wpRole } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
 
   useEffect(() => {
     if (isAuthenticated && wpRole) {
+      if (location.pathname === '/debug') return; // ✅ Skip redirect on /debug
       console.log(`[Frontend] Detected wp_role: ${wpRole}`);
       switch (wpRole) {
         case 'administrator':
