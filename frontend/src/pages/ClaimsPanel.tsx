@@ -1,11 +1,9 @@
-// /frontend/src/pages/ClaimsPanel.tsx
-
 import React from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { jwtDecode } from 'jwt-decode';
 
 const ClaimsPanel: React.FC = () => {
-  const { token, isAuthenticated, login, logout, user } = useAuth();
+  const { isAuthenticated, token, login, logout, user, loading } = useAuth();
 
   const decoded = token ? jwtDecode(token) : null;
 
@@ -16,10 +14,12 @@ const ClaimsPanel: React.FC = () => {
     }
   };
 
+  if (loading) return <div style={{ padding: 20 }}>Loading Auth0 session...</div>;
+
   if (!isAuthenticated) {
     return (
       <div style={{ padding: 20 }}>
-        <h2>Please log in to view your token claims.</h2>
+        <h2>🔐 Please log in to view your token claims</h2>
         <button onClick={login}>Log In</button>
       </div>
     );
