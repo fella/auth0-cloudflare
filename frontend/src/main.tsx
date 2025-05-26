@@ -7,6 +7,7 @@ import App from './App';
 import AdminDashboard from './pages/AdminDashboard';
 import ViewerDashboard from './pages/ViewerDashboard';
 import DebugPanel from './pages/DebugPanel';
+import ClaimsPanel from './pages/ClaimsPanel';
 import { AuthProvider } from './auth/AuthProvider';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -18,6 +19,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/viewer" element={<ViewerDashboard />} />
           <Route path="/debug" element={<DebugPanel />} />
+          <Route path="/claims" element={<ClaimsPanel />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </AuthProvider>
