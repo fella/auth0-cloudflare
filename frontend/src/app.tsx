@@ -11,28 +11,32 @@ function App() {
 
 
   useEffect(() => {
-    if (isAuthenticated && wpRole) {
-      if (location.pathname === '/debug') return; // ✅ Skip redirect on /debug
-      console.log(`[Frontend] Detected wp_role: ${wpRole}`);
-      switch (wpRole) {
-        case 'administrator':
-          navigate('/admin');
-          break;
-        case 'viewer':
-          navigate('/viewer');
-          break;
-        case 'contributor':
-          navigate('/contributor');
-          break;
-        case 'harvestplus_registrant':
-          navigate('/registrant');
-          break;
-        default:
-          navigate('/no-role');
-          break;
+    const timer = setTimeout(() => {
+      if (isAuthenticated && wpRole) {
+        if (location.pathname === '/debug') return; // ✅ Skip redirect on /debug
+        console.log(`[Frontend] Detected wp_role: ${wpRole}`);
+          switch (wpRole) {
+            case 'administrator':
+              navigate('/admin');
+              break;
+            case 'viewer':
+              navigate('/viewer');
+              break;
+            case 'contributor':
+              navigate('/contributor');
+              break;
+            case 'harvestplus_registrant':
+              navigate('/registrant');
+              break;
+            default:
+              navigate('/no-role');
+              break;
+          }
       }
-    }
-  }, [isAuthenticated, wpRole, navigate]);
+  }, 100);
+  return () => clearTimeout(timer);
+  }, 
+  [isAuthenticated, wpRole, navigate]);
 
   const callProtected = async () => {
     console.log('[Frontend] Calling /protected API...');
