@@ -5,8 +5,8 @@
     "jose": "^5.3.0"
   },
   "scripts": {
-    "build": "cd cloudflare-app && npm install && npm run build",
+    "build": "cd worker && npm install && npm run build",
     "deploy": "wrangler deploy",
-    "deploy:worker": "cd cloudflare-app && wrangler deploy"
+    "deploy:worker": "cd worker && wrangler deploy"
   }
 }
