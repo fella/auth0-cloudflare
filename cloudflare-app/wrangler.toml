@@ -1,0 +1,15 @@
+name = "auth0-app-prod"
+type = "typescript"
+account_id = "5555a296cad961f382b0f1f2f793cbae"
+compatibility_date = "2025-05-27"
+
+[build]
+command = "npm run build"
+
+[site]
+bucket = "./dist"
+entry-point = "."
+
+[env.production]
+route = "auth.harvest.org/*"
+zone_id = "38f539b02a2d214258672eea9ff256c7"
