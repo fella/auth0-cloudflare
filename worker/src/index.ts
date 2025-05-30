@@ -5,17 +5,20 @@ export default {
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const pathname = url.pathname;
+    const origin = request.headers.get('Origin') || '';
 
     // 🌐 Dev logging
     console.log('[Worker] Method:', request.method);
     console.log('[Worker] Path:', pathname);
-    console.log('[Worker] Origin:', request.headers.get('Origin'));
+    console.log('[Worker] Origin:', origin);
 
-    // 🛑 Handle CORS preflight
-    const corsResponse = handleOptions(request);
-    if (corsResponse) return corsResponse;
+    // 🛑 Handle CORS preflight requests
+    if (request.method === 'OPTIONS') {
+      const corsResponse = handleOptions(request);
+      return corsResponse || new Response('CORS not allowed', { status: 403 });
+    }
 
-    // 🛡️ Protected API route
+    // 🔒 Protected API route
     if (pathname === '/api/protected') {
       return requireAuth(request, async (user) => {
         const data = {
@@ -31,7 +34,7 @@ export default {
       });
     }
 
-    // 🧪 Debug route
+    // 🧪 Debug route to inspect headers
     if (pathname === '/debug/token') {
       const debugData = {
         message: '🔍 Debug Info',
@@ -44,7 +47,8 @@ export default {
         request
       );
     }
-    
+
+    // 👤 Authenticated user identity
     if (pathname === '/api/whoami') {
       return requireAuth(request, async (user) => {
         const whoami = {
@@ -54,7 +58,7 @@ export default {
           wp_role: user['https://auth.harvest.org/wp_role'] || null,
           group: user['https://auth.harvest.org/group'] || null,
         };
-    
+
         return withCors(
           new Response(JSON.stringify({ message: '🙋 Who Am I', whoami }), {
             headers: { 'Content-Type': 'application/json' },
@@ -63,9 +67,11 @@ export default {
         );
       });
     }
-    
 
-    // 🚫 Catch-all
-    return new Response('Not Found', { status: 404 });
+    // 🚫 Not found — apply CORS headers
+    return withCors(
+      new Response('Not Found', { status: 404 }),
+      request
+    );
   },
 };
