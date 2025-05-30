@@ -1,4 +1,4 @@
-import { jwtVerify } from 'jose';
+import { jwtVerify, decodeProtectedHeader, importJWK } from 'jose';
 
 const AUTH0_DOMAIN = 'https://auth.harvest.org';
 const AUTH0_AUDIENCE = 'https://api.harvest.org';
@@ -12,17 +12,19 @@ export async function requireAuth(request: Request, next: (user: any) => Promise
   const token = authHeader.split(' ')[1];
 
   try {
+    const { kid } = decodeProtectedHeader(token); // ✅ Get the 'kid' from the token
+
     const jwksUri = `${AUTH0_DOMAIN}/.well-known/jwks.json`;
     const res = await fetch(jwksUri);
     const { keys } = await res.json();
 
-    const key = await crypto.subtle.importKey(
-      'jwk',
-      keys[0],
-      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-      false,
-      ['verify']
-    );
+    const jwk = keys.find((key: any) => key.kid === kid);
+    if (!jwk) {
+      console.error(`[Auth] No matching JWK found for kid: ${kid}`);
+      return new Response('Forbidden: No matching JWK', { status: 403 });
+    }
+
+    const key = await importJWK(jwk, 'RS256'); // ✅ Use jose's importJWK helper
 
     const { payload } = await jwtVerify(token, key, {
       issuer: `${AUTH0_DOMAIN}/`,

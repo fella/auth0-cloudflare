@@ -38,7 +38,7 @@ export default {
     if (pathname === '/debug/token') {
       const debugData = {
         message: '🔍 Debug Info',
-        headers: Object.fromEntries(request.headers),
+        headers: Object.fromEntries(Array.from(request.headers as any).entries()),
       };
       return withCors(
         new Response(JSON.stringify(debugData), {
