@@ -13,9 +13,11 @@ function isAllowedOrigin(origin: string): boolean {
 
 // ✅ Handle preflight requests
 export function handleOptions(request: Request): Response | null {
+  const origin = request.headers.get('Origin') || '';
+  console.log('[CORS] Origin allowed:', origin);
+
   if (request.method !== 'OPTIONS') return null;
 
-  const origin = request.headers.get('Origin') || '';
   if (!isAllowedOrigin(origin)) {
     return new Response('Forbidden: Origin not allowed', { status: 403 });
   }
