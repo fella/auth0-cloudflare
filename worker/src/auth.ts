@@ -1,14 +1,23 @@
-import { jwtVerify, decodeProtectedHeader, importJWK, JWTPayload } from 'jose';
+import { KeyLike, jwtVerify, decodeProtectedHeader, importJWK, JWTPayload } from 'jose';
 
 const AUTH0_DOMAIN = 'https://auth.harvest.org';
 const AUTH0_AUDIENCE = 'https://api.harvest.org';
+const JWKS_CACHE_TTL = 3600_000; // 1 hour in milliseconds
 
-// 🔁 In-memory JWKS cache (per Worker instance)
-let cachedJWKS: Record<string, CryptoKey> = {};
+// 🔁 In-memory JWKS cache with expiration
+const cachedJWKS: Record<string, { key: KeyLike; expiresAt: number }> = {};
 
-async function getPublicKeyForToken(token: string): Promise<CryptoKey> {
+async function getPublicKeyForToken(token: string): Promise<KeyLike> {
   const { kid } = decodeProtectedHeader(token);
-  if (cachedJWKS[kid]) return cachedJWKS[kid];
+
+  if (!kid) {
+    throw new Error('Token header missing kid');
+  }
+
+  const cached = cachedJWKS[kid];
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.key;
+  }
 
   const jwksUri = `${AUTH0_DOMAIN}/.well-known/jwks.json`;
   const res = await fetch(jwksUri);
@@ -18,14 +27,22 @@ async function getPublicKeyForToken(token: string): Promise<CryptoKey> {
   if (!jwk) throw new Error(`JWK with kid ${kid} not found`);
 
   const key = await importJWK(jwk, 'RS256');
-  cachedJWKS[kid] = key;
+
+  if (!('type' in key)) {
+    throw new Error('Imported key is not a valid KeyLike object');
+  }
+  cachedJWKS[kid] = {
+    key,
+    expiresAt: Date.now() + JWKS_CACHE_TTL,
+  };
+
   return key;
 }
 
 function validateClaims(payload: JWTPayload): void {
   const now = Math.floor(Date.now() / 1000);
 
-  // 🔐 Reject expired tokens
+  // ⏰ Token expiration check
   if (!payload.exp || payload.exp < now) {
     throw new Error('Token expired');
   }
@@ -49,21 +66,32 @@ function validateClaims(payload: JWTPayload): void {
     throw new Error(`Audience mismatch: ${payload.aud.join(', ')}`);
   }
 
-  // 🛂 Optional: Enforce required roles or groups
-  const roles = payload['https://auth.harvest.org/roles'];
-  if (!roles || !Array.isArray(roles) || roles.length === 0) {
-    throw new Error('Missing required roles');
+  // ✅ Enforce required role
+  const roles = payload['https://auth.harvest.org/roles'] || [];
+  if (!Array.isArray(roles) || !roles.includes('admin')) {
+    throw new Error('Missing required admin role');
   }
 
+  // ✅ Enforce group presence
   const group = payload['https://auth.harvest.org/group'];
   if (!group) {
     throw new Error('Missing group');
   }
 }
 
+// 🧼 Normalize custom claims for easier access
+function normalizeClaims(payload: JWTPayload) {
+  return {
+    ...payload,
+    roles: payload['https://auth.harvest.org/roles'] || [],
+    group: payload['https://auth.harvest.org/group'] || null,
+    wp_role: payload['https://auth.harvest.org/wp_role'] || null,
+  };
+}
+
 export async function requireAuth(
   request: Request,
-  next: (user: JWTPayload) => Promise<Response>
+  next: (user: ReturnType<typeof normalizeClaims>) => Promise<Response>
 ): Promise<Response> {
   const authHeader = request.headers.get('Authorization');
   if (!authHeader?.startsWith('Bearer ')) {
@@ -81,9 +109,10 @@ export async function requireAuth(
     });
 
     validateClaims(payload);
+    const user = normalizeClaims(payload);
 
-    console.log('[Auth] Token verified for user:', payload.sub);
-    return next(payload);
+    console.log('[Auth] Verified user:', user.sub);
+    return next(user);
   } catch (err: any) {
     console.error('[Auth] JWT verification failed:', err.message);
     return new Response(`Forbidden: ${err.message}`, { status: 403 });
