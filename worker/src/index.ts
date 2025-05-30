@@ -1,3 +1,27 @@
+export default {
+  async fetch(request: Request): Promise<Response> {
+    if (request.method === 'OPTIONS') {
+      const origin = request.headers.get('Origin') || '';
+      console.log('[Test] OPTIONS from:', origin);
+
+      return new Response(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': origin,
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+          'Access-Control-Max-Age': '86400',
+          'Vary': 'Origin',
+        },
+      });
+    }
+
+    return new Response('OK');
+  },
+};
+
+
+/*
 import { requireAuth } from './auth';
 import { handleOptions, withCors } from './middleware/cors';
 
@@ -75,3 +99,4 @@ export default {
     );
   },
 };
+*/
